@@ -65,8 +65,12 @@ def qtl_NB(y, GT, depth, M=None, interact=None, **kwargs):
     return pval_GT, pval_inter, nb_res1, nb_res2
 
 
-def qtl_limix(y, GT, depth, M=None, interact=None, add_intercept=True):
-    Ken = np.diag(1.0 / depth)
+def qtl_limix(y, GT, depth=None, M=None, interact=None, add_intercept=True,
+              family='normal'):
+    """
+    family: normal, poisson, binomial, etc.
+    """
+    Ken = None if depth is None else np.diag(1.0 / depth)
     if add_intercept:
         if M is not None:
             M1 = np.append(M, np.ones((y.shape[0], 1)), axis=1)
@@ -76,17 +80,18 @@ def qtl_limix(y, GT, depth, M=None, interact=None, add_intercept=True):
         M1 = M.copy()
     
     qtl1 = limix.qtl.scan(GT.reshape(-1, 1), y.reshape(-1, 1), 
-                          'normal', M=M1, K=Ken, verbose=False)
+                          family, M=M1, K=Ken, verbose=False)
     pval_GT = np.array(qtl1.stats)[0, 4]
         
     pval_inter, qtl2 = None, None
     if interact is not None:
         M2 = np.append(GT.reshape(-1, 1), M1, axis=1)
         qtl2 = limix.qtl.scan((GT * interact).reshape(-1,1), y.reshape(-1, 1), 
-                              'normal', M=M2, K=Ken, verbose=False)
+                              family, M=M2, K=Ken, verbose=False)
         pval_inter = np.array(qtl2.stats)[0, 4]
     
     return pval_GT, pval_inter, qtl1, qtl2
+
 
     
 # def qtl_scan_limix(y, GT, depth, M=None, interact=None):
