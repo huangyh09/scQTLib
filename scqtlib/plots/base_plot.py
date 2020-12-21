@@ -60,15 +60,20 @@ def scatter_adata(adata, mode='tsne', key=None, size=0.5,
 
 
             
-def Gboxplot(G, x, gname=None, SNPname=None):
+def Gboxplot(G, y, gname=None, SNPname=None, showfliers=False, 
+             palette='Blues', dot_hue=None, dot_palette='summer'):
     """Boxplot for quantitive traits vs genotype
     TODO: add documentation!
+    Note: x will always start from xtick == 0; this needs to be fixed.
     """
     import seaborn as sns
     
-    idx = (G >= 0) * (x == x)
-    sns.boxplot(G[idx], x[idx], showfliers=False)
-    sns.swarmplot(G[idx], x[idx], color=".25")
+    idx = (G >= 0) * (y == y)
+    sns.boxplot(x=G[idx], y=y[idx], showfliers=showfliers, palette=palette)
+    if dot_hue is None:
+        sns.swarmplot(G[idx], y[idx], color=".25")
+    else:
+        sns.swarmplot(G[idx], y[idx], hue=dot_hue, palette=dot_palette)
     
     if gname is not None:
         plt.ylabel("log10(CPM + 1), %s" %gname)
