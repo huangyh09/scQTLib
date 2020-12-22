@@ -151,7 +151,7 @@ def qtl_limix(y, GT, depth=None, M=None, interact=None, add_intercept=True,
         else:
             M1 = np.ones((y.shape[0], 1))
     else:
-        M1 = M.copy()
+        M1 = None if M is None else M.copy()
     
     qtl1 = limix.qtl.scan(GT.reshape(-1, 1), y.reshape(-1, 1), 
                           family, M=M1, K=Ken, verbose=False)
@@ -159,7 +159,11 @@ def qtl_limix(y, GT, depth=None, M=None, interact=None, add_intercept=True,
         
     pval_inter, qtl2 = None, None
     if interact is not None:
-        M2 = np.append(GT.reshape(-1, 1), M1, axis=1)
+        if M is None:
+            M2 = GT.reshape(-1, 1)
+        else:
+            M2 = np.append(GT.reshape(-1, 1), M1, axis=1)
+            
         qtl2 = limix.qtl.scan((GT * interact).reshape(-1,1), y.reshape(-1, 1), 
                               family, M=M2, K=Ken, verbose=False)
         pval_inter = np.array(qtl2.stats)[0, 4]

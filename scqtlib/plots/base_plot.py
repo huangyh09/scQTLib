@@ -61,19 +61,27 @@ def scatter_adata(adata, mode='tsne', key=None, size=0.5,
 
             
 def Gboxplot(G, y, gname=None, SNPname=None, showfliers=False, 
-             palette='Blues', dot_hue=None, dot_palette='summer'):
+             palette='Blues', box_hue=None, dot_hue=None, dot_palette='summer'):
     """Boxplot for quantitive traits vs genotype
     TODO: add documentation!
     Note: x will always start from xtick == 0; this needs to be fixed.
     """
     import seaborn as sns
     
-    idx = (G >= 0) * (y == y)
-    sns.boxplot(x=G[idx], y=y[idx], showfliers=showfliers, palette=palette)
-    if dot_hue is None:
-        sns.swarmplot(G[idx], y[idx], color=".25")
+    idx = (G >= 0) #* (y == y)
+    sns.boxplot(x=G[idx], y=y[idx], hue=box_hue, palette=palette,
+                showfliers=showfliers)
+    
+    if box_hue is not None: #mainly for interaction term
+        g = sns.swarmplot(G[idx], y[idx], hue=box_hue[idx], 
+                          palette=dot_palette, dodge=True)
+        h, l = g.get_legend_handles_labels()
+        plt.legend(h[0:2],l[0:2])
+        
+    elif dot_hue is not None:
+        sns.swarmplot(G[idx], y[idx], hue=dot_hue[idx], palette=dot_palette)
     else:
-        sns.swarmplot(G[idx], y[idx], hue=dot_hue, palette=dot_palette)
+        sns.swarmplot(G[idx], y[idx], color=".25")
     
     if gname is not None:
         plt.ylabel("log10(CPM + 1), %s" %gname)
@@ -83,9 +91,9 @@ def Gboxplot(G, y, gname=None, SNPname=None, showfliers=False,
     if SNPname is not None:
         SNP_val = SNPname.split("_")
         if len(SNP_val) == 4:
-            _GT = [SNP_val[2] + SNP_val[2] + ": %d" %(sum(G == 0)),
-                   SNP_val[2] + SNP_val[3] + ": %d" %(sum(G == 1)),
-                   SNP_val[3] + SNP_val[3] + ": %d" %(sum(G == 2))]
+            _GT = [SNP_val[2] + SNP_val[2] + ": %d" %(sum(G == 0)-1),
+                   SNP_val[2] + SNP_val[3] + ": %d" %(sum(G == 1)-1),
+                   SNP_val[3] + SNP_val[3] + ": %d" %(sum(G == 2)-1)]
             plt.xticks([0, 1, 2], _GT)
         plt.xlabel(SNPname)
     plt.xlim(-0.5, 2.5)
