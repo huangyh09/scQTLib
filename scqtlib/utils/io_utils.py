@@ -148,3 +148,50 @@ def save_10X(path, mat, genes, barcodes, version3=False):
                                            path + '/barcodes.tsv')
         pro = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
         pro.communicate()[0]
+
+        
+        
+def read_dropEst(path, cell_file = 'barcodes.tsv',
+                 gene_file = 'genes.tsv',
+                 layer_keys = ['exon', 'intron', 'spanning'],
+                 layer_files = ['cell.counts.exon.mtx', 
+                                'cell.counts.intron.mtx',
+                                'cell.counts.spanning.mtx'],
+                 combine_unspliced = True):
+    """
+    Load dropEst matrices produced by this script:
+    
+    """
+    ## load 10X matrix folder
+#     genes = np.genfromtxt(path + "/" + gene_file, dtype="str", delimiter="\t")
+#     cells = np.genfromtxt(path + "/" + cell_file, dtype="str", delimiter="\t")
+
+    genes = pd.read_csv(path + "/" + gene_file, sep="\t", index_col=0, header=None)
+    cells = pd.read_csv(path + "/" + cell_file, sep="\t", index_col=0, header=None)
+    
+    mat_list = []
+    for _mxt_file in layer_files:
+        mat_list.append(io.mmread(path + "/" + _mxt_file).tocsr().T)
+        
+    if len(mat_list) == 0:
+        print('Error: requiring at least one matrix.')
+        return None
+    
+    # change layer names
+    if combine_unspliced and len(mat_list) == 3:
+        mat_list[1] += mat_list[2]
+        mat_list = mat_list[:2]
+        layer_keys = ['spliced', 'unspliced']
+    
+    if len(layer_keys) != len(mat_list):
+        print('Warning: len(layer_keys) != len(mat_list). Use index instead.')
+        layer_keys = ['matrix%d' %(x + 1) for x in range(len(mat_list))]
+        
+    layers = {}
+    for i in range(len(mat_list)):
+        layers[layer_keys[i]] = mat_list[i]
+    
+    X = mat_list[0].copy()
+    adata = sc.AnnData(X, obs=cells, var=genes, layers=layers)
+
+    return adata
