@@ -10,7 +10,7 @@ version by following command line
 
 .. code-block:: bash
 
-  pip install -U git+https://github.com/huangyh/scQTLib
+  pip install -U git+https://github.com/huangyh09/scQTLib
 
 In either case, add ``--user`` if you don't have the write permission for your 
 Python environment.
