@@ -62,7 +62,7 @@ def scatter_adata(adata, mode='tsne', key=None, size=0.5,
             
 def Gboxplot(G, y, gene_name=None, SNP_name=None, showfliers=False, 
              palette='Blues', box_hue=None, dot_hue=None, 
-             dot_palette='summer', xticks=[0, 1, 2]):
+             dot_palette='summer'):
     """Boxplot for quantitive traits vs genotype
     TODO: add documentation!
     Note: x will always start from xtick == 0; this needs to be fixed.
@@ -70,10 +70,6 @@ def Gboxplot(G, y, gene_name=None, SNP_name=None, showfliers=False,
     import seaborn as sns
     
     idx = (G == G) & (y == y)
-    
-    if xticks is not None:
-        plt.plot(xticks, [None] * len(xticks))
-        plt.xlim(min(xticks) - 0.5, max(xticks) + 0.5)
     
     if box_hue is not None:
         sns.boxplot(x=G[idx], y=y[idx], hue=box_hue[idx], palette=palette,
@@ -106,4 +102,5 @@ def Gboxplot(G, y, gene_name=None, SNP_name=None, showfliers=False,
             plt.xticks([0, 1, 2], _GT)
         plt.xlabel(SNP_name)
     
+    plt.xlim(-0.5, 2.5)
     
