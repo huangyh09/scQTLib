@@ -9,14 +9,25 @@ import scanpy as sc
 from scipy import io
 from scipy.sparse import hstack
 
-def adata_hstack(blocks, sample_ids=None):
+def adata_hstack(blocks, sample_ids=None, layer_keys=None):
+    if layer_keys is None:
+        layer_keys = blocks[0].layers.keys()
+    
+    layers = {}
+    for _key in layer_keys:
+        layers[_key] = hstack([adata.layers[_key].T for adata in blocks]).T
+
+    if len(layer_keys) == 0:
+        layers = None
+    
     X_blocks = [adata.X.transpose() for adata in blocks]
     obs_blocks = [adata.obs for adata in blocks]
     
     new_X = hstack(X_blocks).transpose()
     new_obs = pd.concat(obs_blocks, axis=0)
     new_var = blocks[0].var
-    new_adata = anndata.AnnData(X=new_X, obs=new_obs, var=new_var)
+    new_adata = anndata.AnnData(X=new_X, obs=new_obs, var=new_var, 
+                                layers=layers)
     
     sample_ids_default = []
     for i in range(len(blocks)):
@@ -163,8 +174,8 @@ def read_dropEst(path, cell_file = 'barcodes.tsv',
     
     """
     ## load 10X matrix folder
-#     genes = np.genfromtxt(path + "/" + gene_file, dtype="str", delimiter="\t")
-#     cells = np.genfromtxt(path + "/" + cell_file, dtype="str", delimiter="\t")
+    # genes = np.genfromtxt(path + "/" + gene_file, dtype="str", delimiter="\t")
+    # cells = np.genfromtxt(path + "/" + cell_file, dtype="str", delimiter="\t")
 
     genes = pd.read_csv(path + "/" + gene_file, sep="\t", index_col=0, header=None)
     cells = pd.read_csv(path + "/" + cell_file, sep="\t", index_col=0, header=None)

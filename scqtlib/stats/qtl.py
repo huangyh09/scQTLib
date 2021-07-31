@@ -106,10 +106,10 @@ def qtl_NB(y, GT, depth, M=None, interact=None, **kwargs):
     return qtl_statsmodels(y, GT, depth, M=None, interact=None, **kwargs)
 
 
-def qtl_statsmodels(y, GT, depth, M=None, interact=None, **kwargs):
+def qtl_statsmodels(y, GT, depth, M=None, interact=None, rm_NA=True, **kwargs):
     """
     default: family=sm.families.NegativeBinomial()
-    """
+    """    
     if M is not None:
         M1 = np.append(np.log(depth + 1).reshape(-1, 1), M, axis=1)
     else:
@@ -120,6 +120,13 @@ def qtl_statsmodels(y, GT, depth, M=None, interact=None, **kwargs):
     # else:
     #     M1 = depth.reshape(-1, 1)
 
+    if rm_NA:
+        idx = (GT == GT) * (y == y)
+        y = y[idx]
+        GT = GT[idx]
+        M1 = M1[idx, :]
+        interact = None if interact is None else interact[idx]
+    
     try:
         nb_res1 = glm_LRT(y, GT, M=M1, **kwargs)
         pval_GT = nb_res1.p_LRT
@@ -140,7 +147,7 @@ def qtl_statsmodels(y, GT, depth, M=None, interact=None, **kwargs):
 
 
 def qtl_limix(y, GT, depth=None, M=None, interact=None, add_intercept=True,
-              family='normal'):
+              family='normal', rm_NA=True):
     """
     family: normal, poisson, binomial, etc.
     """
@@ -152,11 +159,21 @@ def qtl_limix(y, GT, depth=None, M=None, interact=None, add_intercept=True,
             M1 = np.ones((y.shape[0], 1))
     else:
         M1 = None if M is None else M.copy()
-    
+        
+    if rm_NA:
+        idx = list((GT == GT) * (y == y))
+        y = y[idx]
+        GT = GT[idx]
+        M1 = None if M1 is None else M1[idx, :]
+        Ken = None if Ken is None else Ken[idx, :][:, idx]
+        interact = None if interact is None else interact[idx]
+        
+    ## qtl on genotype
     qtl1 = limix.qtl.scan(GT.reshape(-1, 1), y.reshape(-1, 1), 
                           family, M=M1, K=Ken, verbose=False)
     pval_GT = np.array(qtl1.stats)[0, 4]
         
+    ## qtl on interaction term
     pval_inter, qtl2 = None, None
     if interact is not None:
         if M is None:

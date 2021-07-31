@@ -5,11 +5,23 @@ import statsmodels.api as sm
 from statsmodels.sandbox.stats.multicomp import multipletests
 
 
+"""
+Note, GLM with family NegativeBinomial takes the negative binomial dispersion 
+parameter as fixed, while the discrete model NegativeBinomial estimates the 
+dispersion parameter by MLE jointly with the mean parameters.
+
+https://stackoverflow.com/questions/46835123/
+"""
+
+
 def glm_LRT(y, X, M=None, add_intercept=True,
             family=sm.families.NegativeBinomial(), 
             **kwargs):
     """
-    Likelihood ratio test for negative binomial regression test
+    Likelihood ratio test for negative binomial regression test.
+    
+    Note, sm.GLM with family NegativeBinomial uses fixed dispersion, please fit
+    it beforehand, e.g., by statsmodels.discrete.discrete_model.NegativeBinomial
     
     Parameters
     ----------
