@@ -62,7 +62,7 @@ def scatter_adata(adata, mode='tsne', key=None, size=0.5,
             
 def Gboxplot(G, y, gene_name=None, SNP_name=None, showfliers=False, 
              palette='Blues', box_hue=None, dot_hue=None, 
-             dot_palette='summer'):
+             dot_palette='summer', orient="v"):
     """Boxplot for quantitive traits vs genotype
     TODO: add documentation!
     Note: x will always start from xtick == 0; this needs to be fixed.
@@ -70,28 +70,35 @@ def Gboxplot(G, y, gene_name=None, SNP_name=None, showfliers=False,
     import seaborn as sns
     
     idx = (G == G) & (y == y)
+    if orient == "h":
+        is_horizontal = True
+        x_val, y_val = y[idx], G[idx]
+    else:
+        is_horizontal = False
+        x_val, y_val = G[idx], y[idx]
     
     if box_hue is not None:
-        sns.boxplot(x=G[idx], y=y[idx], hue=box_hue[idx], palette=palette,
-                    showfliers=showfliers)
+        sns.boxplot(x_val, y_val, hue=box_hue[idx], palette=palette,
+                    showfliers=showfliers, orient=orient)
         
-        g = sns.swarmplot(G[idx], y[idx], hue=box_hue[idx], 
-                          palette=dot_palette, dodge=True)
+        g = sns.swarmplot(x_val, y_val, hue=box_hue[idx], 
+                          palette=dot_palette, dodge=True, orient=orient)
         h, l = g.get_legend_handles_labels()
         plt.legend(h[0:2], l[0:2])
     elif dot_hue is not None:
-        sns.boxplot(x=G[idx], y=y[idx], hue=None, palette=palette,
-                    showfliers=showfliers)
-        sns.swarmplot(G[idx], y[idx], hue=dot_hue[idx], palette=dot_palette)
+        sns.boxplot(x_val, y_val, hue=None, palette=palette,
+                    showfliers=showfliers, orient=orient)
+        sns.swarmplot(x_val, y_val, hue=dot_hue[idx], 
+                      palette=dot_palette, orient=orient)
     else:
-        sns.boxplot(x=G[idx], y=y[idx], hue=None, palette=palette,
-                    showfliers=showfliers)
-        sns.swarmplot(G[idx], y[idx], color=".25")
+        sns.boxplot(x_val, y_val, hue=None, palette=palette,
+                    showfliers=showfliers, orient=orient)
+        sns.swarmplot(x_val, y_val, color=".25", orient=orient)
     
-    if gene_name is not None:
-        plt.ylabel("log10(CPM + 1), %s" %gene_name)
-    else:
-        plt.ylabel("log10(CPM + 1)")
+    # if gene_name is not None:
+    #     plt.ylabel("log10(CPM + 1), %s" %gene_name)
+    # else:
+    #     plt.ylabel("log10(CPM + 1)")
         
     if SNP_name is not None:
         SNP_val = SNP_name.split("_")
@@ -99,8 +106,17 @@ def Gboxplot(G, y, gene_name=None, SNP_name=None, showfliers=False,
             _GT = [SNP_val[2] + SNP_val[2] + ": %d" %(sum(G == 0)),
                    SNP_val[2] + SNP_val[3] + ": %d" %(sum(G == 1)),
                    SNP_val[3] + SNP_val[3] + ": %d" %(sum(G == 2))]
-            plt.xticks([0, 1, 2], _GT)
-        plt.xlabel(SNP_name)
+            if is_horizontal:
+                plt.yticks([0, 1, 2], _GT, rotation=90, va='center')
+            else:
+                plt.xticks([0, 1, 2], _GT)
+                
+        if is_horizontal:
+            plt.ylabel(SNP_name)
+        else:
+            plt.xlabel(SNP_name)
     
-    plt.xlim(-0.5, 2.5)
-    
+    if is_horizontal:
+        plt.ylim(-0.5, 2.5)
+    else:
+        plt.xlim(-0.5, 2.5)

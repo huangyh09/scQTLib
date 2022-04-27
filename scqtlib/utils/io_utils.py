@@ -97,15 +97,34 @@ def adata_preprocess(adata, min_cells=3, min_genes=500, max_genes=5000,
 
 
 
-def load_10X(path, min_counts=None, min_cells=None, version3=False):
+def load_10X(path, min_counts=None, min_cells=None, source="CellRanger2"):
     """
     Load 10X data from cellranger output matrix, into 
     scipy csr matrix, arrays for genes and cell barcodes
-    
-    Filter cells by min_counts and filter genes by min_cells
+        
+    Parameters
+    ----------
+    path: str
+        The directory path for the matrix folder
+    min_counts: int
+        The number of minimum counts for filtering cells. None means no 
+        filtering
+    min_cells: int
+        The number of minimum detected cells for filtering cells. None means no 
+        filtering
+    source: str
+        The source of the matrix folder: CellRanger2, CellRanger3, or STARsolo
+        
+    Returns
+    -------
+    A tuple (mat, genes, cells) in (csr sparse matrix, numpy.array, numpy.array)
     """
     ## load 10X matrix folder
-    if version3:
+    if source == "STARsolo":
+        mat = io.mmread(path + "/matrix.mtx").tocsr()
+        genes = np.genfromtxt(path + "/features.tsv", dtype="str", delimiter="\t")
+        cells = np.genfromtxt(path + "/barcodes.tsv", dtype="str", delimiter="\t")
+    elif source == "CellRanger3":
         mat = io.mmread(path + "/matrix.mtx.gz").tocsr()
         genes = np.genfromtxt(path + "/features.tsv.gz", dtype="str", delimiter="\t")
         cells = np.genfromtxt(path + "/barcodes.tsv.gz", dtype="str", delimiter="\t")
